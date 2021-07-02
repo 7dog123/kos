@@ -1,0 +1,213 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  repository_dispatch:
+    types: [run_build]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os[0] }}
+    strategy:
+      matrix:
+        os: [[ubuntu-latest, bash], [macOS-latest, bash], [windows-latest, msys2]]
+      fail-fast: false
+    defaults:
+     run:
+      shell: ${{ matrix.os[1] }} {0}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install Ubuntu Deps
+      if: matrix.os[0] == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install build-essential texinfo libjpeg-dev libpng-dev libelf-dev git subversion python
+        echo "MSYSTEM=x32" >> $GITHUB_ENV
+
+    - name: Install Mac Deps
+      if: matrix.os[0] == 'macOS-latest'
+      run: |
+        brew update
+        brew upgrade
+        brew install libjpeg libpng libelf
+        echo "MSYSTEM=x32" >> $GITHUB_ENV
+
+    - name: Install MSYS2 Deps
+      if: matrix.os[0] == 'windows-latest'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW32
+        install: git mingw-w64-i686-binutils mingw-w64-i686-gcc base-devel mingw-w64-i686-libpng mingw-w64-i686-libjpeg mingw-w64-i686-libelf bison flex wget subversion python
+        shell: msys2 {0}
+
+    - name: cloning KallistiOS and kos-ports - ubuntu
+      continue-on-error: true
+      if: matrix.os[0] == 'ubuntu-latest'
+      run: |
+        INSTALL_DIR="/opt/toolchains/dc"
+        KOS="$INSTALL_DIR/kos"
+        PORTS="$INSTALL_DIR/kos-ports"
+        echo "Creating directory $INSTALL_DIR as root, giving users access to it."
+        mkdir -p "$INSTALL_DIR"
+        git clone https://github.com/7dog123/KallistiOS "$KOS"
+        git clone --recursive https://github.com/KallistiOS/kos-ports  "$PORTS"
+
+    - name: Building the compiler ubuntu
+      continue-on-error: true
+      if: matrix.os[0] == 'ubuntu-latest'
+      run: |
+        INSTALL_DIR="/opt/toolchains/dc"
+        KOS="$INSTALL_DIR/kos"
+        PORTS="$INSTALL_DIR/kos-ports"
+        cd "$KOS/utils/dc-chain"
+        cp -r config.mk.testing.sample config.mk
+        ./download.sh
+        ./unpack.sh
+        make patch
+        make build
+        ./cleanup.sh
+
+    - name: build KOS and kos-ports ubuntu
+      continue-on-error: true
+      if: matrix.os[0] == 'ubuntu-latest'
+      run: |
+        INSTALL_DIR="/opt/toolchains/dc"
+        KOS="$INSTALL_DIR/kos"
+        PORTS="$INSTALL_DIR/kos-ports"
+        cd "$KOS"
+        cp -r "$KOS/doc/environ.sh.sample" "$KOS/environ.sh"
+        chmod 755 *sh
+        . "$KOS/environ.sh"
+        export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
+        make
+        . "$PORTS/utils/build-all.sh"
+        
+    - name: cloning KallistiOS and kos-ports - windows
+      continue-on-error: true
+      if: matrix.os[0] == 'windows-latest'
+      run: |
+        INSTALL_DIR="/opt/toolchains/dc"
+        KOS="$INSTALL_DIR/kos"
+        PORTS="$INSTALL_DIR/kos-ports"
+        echo "Creating directory $INSTALL_DIR as root, giving users access to it."
+        mkdir -p "$INSTALL_DIR"
+        git clone https://github.com/7dog123/KallistiOS "$KOS"
+        git clone --recursive https://github.com/KallistiOS/kos-ports  "$PORTS"
+
+    - name: Building the compiler - windows
+      continue-on-error: true
+      if: matrix.os[0] == 'windows-latest'
+      run: |
+        INSTALL_DIR="/opt/toolchains/dc"
+        KOS="$INSTALL_DIR/kos"
+        PORTS="$INSTALL_DIR/kos-ports"
+        cd "$KOS/utils/dc-chain"
+        cp -r config.mk.testing.sample config.mk
+        ./download.sh
+        ./unpack.sh
+        make patch
+        make build
+        ./cleanup.sh
+        . "$KOS/utils/dc-chain/doc/mingw/packages/fixup-sh4-newlib.sh"
+
+    - name: build KOS and kos-ports windows
+      continue-on-error: true
+      if: matrix.os[0] == 'windows-latest'
+      run: |
+        INSTALL_DIR="/opt/toolchains/dc"
+        KOS="$INSTALL_DIR/kos"
+        PORTS="$INSTALL_DIR/kos-ports"
+        cd "$KOS"
+        cp -r "$KOS/doc/environ.sh.sample" "$KOS/environ.sh"
+        chmod 755 *sh
+        . "$KOS/environ.sh"
+        export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
+        make
+        . "$PORTS/utils/build-all.sh"
+
+    - name: cloning KallistiOS and kos-ports - macOS
+      continue-on-error: true
+      if: matrix.os[0] == 'macOS-latest'
+      run: |
+        INSTALL_DIR="/opt/toolchains/dc"
+        KOS="$INSTALL_DIR/kos"
+        PORTS="$INSTALL_DIR/kos-ports"
+        echo "Creating directory $INSTALL_DIR as root, giving users access to it."
+        sudo mkdir -p /opt/toolchains
+        sudo mkdir -p /opt/toolchains/dc
+        sudo mkdir -p /opt/toolchains/dc/kos
+        sudo mkdir -p /opt/toolchains/dc/kos-ports
+        sudo git clone https://github.com/7dog123/KallistiOS "$KOS"
+        sudo git clone --recursive https://github.com/KallistiOS/kos-ports  "$PORTS"
+
+    - name: Building the compiler - macOS
+      continue-on-error: true
+      if: matrix.os[0] == 'macOS-latest'
+      run: |
+        INSTALL_DIR="/opt/toolchains/dc"
+        KOS="$INSTALL_DIR/kos"
+        PORTS="$INSTALL_DIR/kos-ports"
+        cd "$KOS/utils/dc-chain"
+        sudo cp config.mk.testing.sample config.mk
+        sudo ./download.sh
+        sudo ./unpack.sh
+        sudo make patch
+        sudo make build
+        sudo ./cleanup.sh
+
+    - name: build KOS and kos-ports - macOS
+      continue-on-error: true
+      if: matrix.os[0] == 'macOS-latest'
+      run: |
+        INSTALL_DIR="/opt/toolchains/dc"
+        KOS="$INSTALL_DIR/kos"
+        PORTS="$INSTALL_DIR/kos-ports"
+        cd /opt/toolchains/dc/kos
+        sudo cp doc/environ.sh.sample /opt/toolchains/dc/kos/environ.sh
+        sudo chmod 755 *sh
+        ./environ.sh
+        export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
+        make
+        ./opt/toolchains/dc/kos-ports/utils/build-all.sh
+
+    - name: Get short SHA
+      id: slug
+      run: echo "::set-output name=sha8::${MSYSTEM}-sha[$(echo ${GITHUB_SHA} | cut -c1-8)]"
+
+    - name: Prepare kos folder
+      run: |
+        tar -zcvf kos-${{matrix.os[0]}}.tar.gz /opt/toolchains/dc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: kos-${{matrix.os[0]}}-${{ steps.slug.outputs.sha8 }}
+        path: kos-${{matrix.os[0]}}.tar.gz
+
+    - name: Extract tag name
+      if: startsWith(github.ref, 'refs/tags/')
+      id: tag
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+    - name: Create pre-release
+      if: github.ref == 'refs/heads/master'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: kos-${{matrix.os[0]}}.tar.gz
+        prerelease: true
+        name: "Development build"
+        tag_name: "latest"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: kos-${{matrix.os[0]}}.tar.gz
+        tag_name: ${{ steps.tag.outputs.VERSION }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
