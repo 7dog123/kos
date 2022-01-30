@@ -35,7 +35,7 @@ jobs:
         brew update
         brew upgrade
         brew install libjpeg libpng libelf wget
-        brew uninstall --ignore-dependencies curl
+        #brew uninstall --ignore-dependencies curl
         echo "MSYSTEM=x32" >> $GITHUB_ENV
 
     - name: Install MSYS2 Deps
