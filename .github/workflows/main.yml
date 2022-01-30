@@ -35,7 +35,7 @@ jobs:
         brew update
         brew upgrade
         brew install libjpeg libpng libelf wget
-        brew remove curl
+        brew uninstall --ignore-dependencies curl
         echo "MSYSTEM=x32" >> $GITHUB_ENV
 
     - name: Install MSYS2 Deps
@@ -43,7 +43,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW32
-        install: git mingw-w64-i686-binutils mingw-w64-i686-gcc base-devel mingw-w64-i686-libpng mingw-w64-i686-libjpeg mingw-w64-i686-libelf bison flex wget subversion python
+        install: git mingw-w64-i686-binutils mingw-w64-i686-gcc mingw-w64-i686-libpng mingw-w64-i686-libjpeg mingw-w64-i686-libelf bison flex wget subversion python
         shell: msys2 {0}
 
     - name: cloning KallistiOS and kos-ports - ubuntu
