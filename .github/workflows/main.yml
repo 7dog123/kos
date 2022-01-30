@@ -170,10 +170,10 @@ jobs:
         cd "$KOS"
         cp -r "$KOS/doc/environ.sh.sample" "$KOS/environ.sh"
         chmod 755 *sh
-        . "$KOS/environ.sh"
+        bash . "$KOS/environ.sh"
         export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
         make
-        . "$PORTS/utils/build-all.sh"
+        bash . "$PORTS/utils/build-all.sh"
 
     - name: Get short SHA
       id: slug
