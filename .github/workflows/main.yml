@@ -168,13 +168,13 @@ jobs:
         INSTALL_DIR="/opt/toolchains/dc"
         KOS="$INSTALL_DIR/kos"
         PORTS="$INSTALL_DIR/kos-ports"
-        cd /opt/toolchains/dc/kos
-        sudo cp doc/environ.sh.sample /opt/toolchains/dc/kos/environ.sh
-        sudo chmod 755 *sh
-        ./environ.sh
+        cd "$KOS"
+        cp -r "$KOS/doc/environ.sh.sample" "$KOS/environ.sh"
+        chmod 755 *sh
+        . "$KOS/environ.sh"
         export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
         make
-        . "$PORTS/utils/build-all.sh
+        . "$PORTS/utils/build-all.sh"
 
     - name: Get short SHA
       id: slug
