@@ -43,7 +43,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW32
-        install: git mingw-w64-i686-binutils mingw-w64-i686-gcc mingw-w64-i686-libpng mingw-w64-i686-libjpeg mingw-w64-i686-libelf bison flex wget subversion python
+        install: mingw-w64-i686-binutils mingw-w64-i686-gcc mingw-w64-i686-libpng mingw-w64-i686-libjpeg mingw-w64-i686-libelf bison flex wget subversion python
         shell: msys2 {0}
 
     - name: cloning KallistiOS and kos-ports - ubuntu
@@ -104,7 +104,6 @@ jobs:
       continue-on-error: true
       if: matrix.os[0] == 'windows-latest'
       run: |
-        pacman --noconfirm -R curl
         INSTALL_DIR="/opt/toolchains/dc"
         KOS="$INSTALL_DIR/kos"
         PORTS="$INSTALL_DIR/kos-ports"
