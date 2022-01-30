@@ -174,7 +174,7 @@ jobs:
         ./environ.sh
         export PATH="${PATH}:${KOS_BASE}/utils/gnu_wrappers"
         make
-        ./opt/toolchains/dc/kos-ports/utils/build-all.sh
+        . "$PORTS/utils/build-all.sh
 
     - name: Get short SHA
       id: slug
